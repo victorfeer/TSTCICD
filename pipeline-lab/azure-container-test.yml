@@ -1,0 +1,42 @@
+
+trigger: none
+
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'ubuntu-24.04'
+
+jobs:
+- job: BuildTest
+  displayName: 'Compilar e testar Java 8'
+
+  container:
+    image: 'maven:3.9.9-eclipse-temurin-8'
+
+  steps:
+  - checkout: self
+
+  - script: |
+      java -version
+      mvn -version
+      mvn -B clean verify
+    workingDirectory: '$(Build.SourcesDirectory)/pipeline-lab'
+    displayName: 'Compilacao e testes unitarios'
+
+  - task: PublishTestResults@2
+    displayName: 'Publicar resultados JUnit'
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFormat: 'JUnit'
+      testResultsFiles: '**/surefire-reports/TEST-*.xml'
+      searchFolder: '$(Build.SourcesDirectory)/pipeline-lab'
+      failTaskOnFailedTests: true
+      failTaskOnMissingResultsFile: true
+
+  - publish: '$(Build.SourcesDirectory)/pipeline-lab/target'
+    artifact: 'jar-build'
+    displayName: 'Publicar artefato Maven'
+    condition: succeeded()
