@@ -1,0 +1,46 @@
+trigger: none
+pr: none
+
+resources:
+  pipelines:
+    - pipeline: ci
+      source: 'victorfeer.TSTCICD (2)'
+      trigger: none
+
+pool:
+  vmImage: 'ubuntu-24.04'
+
+stages:
+  - stage: Deploy_DEV
+    displayName: 'Deploy simulado em DEV'
+    jobs:
+      - job: Deploy
+        displayName: 'Entregar JAR em DEV'
+        steps:
+          - checkout: none
+
+          - download: ci
+            artifact: jar-build
+            displayName: 'Baixar artefato do CI'
+
+          - script: |
+              set -e
+
+              mkdir -p "$(Pipeline.Workspace)/dev"
+
+              cp "$(Pipeline.Workspace)/ci/jar-build/pipeline-lab-1.0.0.jar" \
+                 "$(Pipeline.Workspace)/dev/"
+
+              echo "JAR entregue no ambiente DEV simulado."
+
+              ls -lh "$(Pipeline.Workspace)/dev/"
+
+              sha256sum "$(Pipeline.Workspace)/ci/jar-build/pipeline-lab-1.0.0.jar"
+              sha256sum "$(Pipeline.Workspace)/dev/pipeline-lab-1.0.0.jar"
+
+              cmp "$(Pipeline.Workspace)/ci/jar-build/pipeline-lab-1.0.0.jar" \
+                  "$(Pipeline.Workspace)/dev/pipeline-lab-1.0.0.jar"
+
+              echo "Integridade validada com sucesso."
+
+            displayName: 'Simular deploy e validar integridade'
