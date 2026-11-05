@@ -1,3 +1,4 @@
+
 trigger: none
 pr: none
 
@@ -14,33 +15,38 @@ stages:
   - stage: Deploy_DEV
     displayName: 'Deploy simulado em DEV'
     jobs:
-      - job: Deploy
+      - deployment: Deploy
         displayName: 'Entregar JAR em DEV'
-        steps:
-          - checkout: none
+        environment: 'DEV'
 
-          - download: ci
-            artifact: jar-build
-            displayName: 'Baixar artefato do CI'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: none
 
-          - script: |
-              set -e
+                - download: ci
+                  artifact: jar-build
+                  displayName: 'Baixar artefato do CI'
 
-              mkdir -p "$(Pipeline.Workspace)/dev"
+                - script: |
+                    set -e
 
-              cp "$(Pipeline.Workspace)/ci/jar-build/pipeline-lab-1.0.0.jar" \
-                 "$(Pipeline.Workspace)/dev/"
+                    mkdir -p "$(Pipeline.Workspace)/dev"
 
-              echo "JAR entregue no ambiente DEV simulado."
+                    cp "$(Pipeline.Workspace)/ci/jar-build/pipeline-lab-1.0.0.jar" \
+                       "$(Pipeline.Workspace)/dev/"
 
-              ls -lh "$(Pipeline.Workspace)/dev/"
+                    echo "JAR entregue no ambiente DEV simulado."
 
-              sha256sum "$(Pipeline.Workspace)/ci/jar-build/pipeline-lab-1.0.0.jar"
-              sha256sum "$(Pipeline.Workspace)/dev/pipeline-lab-1.0.0.jar"
+                    ls -lh "$(Pipeline.Workspace)/dev/"
 
-              cmp "$(Pipeline.Workspace)/ci/jar-build/pipeline-lab-1.0.0.jar" \
-                  "$(Pipeline.Workspace)/dev/pipeline-lab-1.0.0.jar"
+                    sha256sum "$(Pipeline.Workspace)/ci/jar-build/pipeline-lab-1.0.0.jar"
+                    sha256sum "$(Pipeline.Workspace)/dev/pipeline-lab-1.0.0.jar"
 
-              echo "Integridade validada com sucesso."
+                    cmp "$(Pipeline.Workspace)/ci/jar-build/pipeline-lab-1.0.0.jar" \
+                        "$(Pipeline.Workspace)/dev/pipeline-lab-1.0.0.jar"
 
-            displayName: 'Simular deploy e validar integridade'
+                    echo "Integridade validada com sucesso."
+
+                  displayName: 'Simular deploy e validar integridade'
